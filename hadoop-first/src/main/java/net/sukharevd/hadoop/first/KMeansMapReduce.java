@@ -308,10 +308,11 @@ public final class KMeansMapReduce extends Configured implements Tool {
         job.set("centroids.path", center.suffix("/it0").toString());
         generateInitCentroids(conf, job, in, k);
 
-        for (long i = 0; i < maxIteration; i++) {
+        long i;
+        for (i = 0; i < maxIteration; i++) {
             conf = getConf();
             job = new JobConf(conf, KMeansMapReduce.class);
-            job.setLong("clustering.iteration", Long.valueOf(i));
+            job.setLong("clustering.iteration", i);
             Path prevout = center.suffix("/it" + job.get("clustering.iteration"));
             Path out = center.suffix("/it" + (i + 1));
             job.set("centroids.path", prevout.toString());
@@ -337,7 +338,7 @@ public final class KMeansMapReduce extends Configured implements Tool {
 
         conf = getConf();
         job = new JobConf(conf, KMeansMapReduce.class);
-        job.setLong("clustering.iteration", Long.valueOf(maxIteration));
+        job.setLong("clustering.iteration", i);
         Path prevout = center.suffix("/it" + job.get("clustering.iteration"));
         job.set("centroids.path", prevout.toString());
         Path out = new Path(args[1]);
