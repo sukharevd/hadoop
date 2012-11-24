@@ -1,10 +1,10 @@
 package net.sukharevd.hadoop.first;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
 
 import java.io.IOException;
 
-import net.sukharevd.hadoop.first.NeuralNetworkMapReduce.Matrix;
+import net.sukharevd.hadoop.entities.Matrix;
 import net.sukharevd.hadoop.first.NeuralNetworkMapReduce.NeuralNetworkMapper;
 import net.sukharevd.hadoop.first.NeuralNetworkMapReduce.NeuralNetworkReducer;
 

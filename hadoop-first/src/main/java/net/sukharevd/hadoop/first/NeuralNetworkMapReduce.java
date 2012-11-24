@@ -1,17 +1,15 @@
 package net.sukharevd.hadoop.first;
 
-import static net.sukharevd.hadoop.first.JamaExt.addConstant;
-import static net.sukharevd.hadoop.first.JamaExt.addOneColumn;
-import static net.sukharevd.hadoop.first.JamaExt.generateZ;
-import static net.sukharevd.hadoop.first.JamaExt.log;
-import static net.sukharevd.hadoop.first.JamaExt.removeFirstColumn;
-import static net.sukharevd.hadoop.first.JamaExt.square;
-import static net.sukharevd.hadoop.first.JamaExt.sum;
+import static net.sukharevd.hadoop.util.JamaExt.addConstant;
+import static net.sukharevd.hadoop.util.JamaExt.addOneColumn;
+import static net.sukharevd.hadoop.util.JamaExt.generateZ;
+import static net.sukharevd.hadoop.util.JamaExt.log;
+import static net.sukharevd.hadoop.util.JamaExt.removeFirstColumn;
+import static net.sukharevd.hadoop.util.JamaExt.square;
+import static net.sukharevd.hadoop.util.JamaExt.sum;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.DataInput;
-import java.io.DataOutput;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
@@ -24,6 +22,8 @@ import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import net.sukharevd.hadoop.entities.Matrix;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -35,7 +35,6 @@ import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.JobClient;
@@ -56,114 +55,8 @@ public final class NeuralNetworkMapReduce extends Configured implements Tool {
     
     private List<Map<String, Long>> columnLabelsReplacements = new ArrayList<Map<String, Long>>();
     
-    public static class Matrix implements Writable {
-        
-        private double[][] items;
-//        private String additionalInfo;
-
-        public Matrix() {
-        }
-        
-        public Matrix(double[][] items) {
-            this.items = Arrays.copyOf(items, items.length); // not deep clone
-        }
-
-        public Matrix(Matrix clone) {
-            items = Arrays.copyOf(clone.items, clone.items.length); // not deep clone
-//            additionalInfo = clone.additionalInfo;
-        }
-//
-//        public Matrix(double[][] items, String additionalInfo) {
-//            this.items = Arrays.copyOf(items, items.length); // not deep clone
-//            this.additionalInfo = additionalInfo;
-//        }
-
-        public double[][] getItems() {
-            return items;
-        }
-
-        public void setItems(double[][] items) {
-            this.items = items;
-        }
-
-//        public String getAdditionalInfo() {
-//            return additionalInfo;
-//        }
-//
-//        public void setAdditionalInfo(String additionalInfo) {
-//            this.additionalInfo = additionalInfo;
-//        }
-
-        @Override
-        public void readFields(DataInput in) throws IOException {
-            String matrixStr = in.readUTF();
-            Matrix matrix = valueOf(matrixStr);
-            items = matrix.getItems();
-//            additionalInfo = matrix.getAdditionalInfo();
-        }
-
-        public static Matrix valueOf(String matrixStr) {
-            List<List<Double>> dynamicItems = new ArrayList<List<Double>>();
-//            String[] split0 = matrixStr.split("\\|");
-            String[] split1 = matrixStr.split("\\s*;\\s*");
-            for (String vectorString : split1) {
-                String[] split2 = vectorString.split("\\s+");
-                ArrayList<Double> vector = new ArrayList<Double>(split2.length+1);
-                for (String vectorItemString : split2) {
-                    vector.add(Double.valueOf(vectorItemString));
-                    
-                }
-                dynamicItems.add(vector);
-            }
-            double[][] items = new double[dynamicItems.size()][dynamicItems.get(0).size()];
-            for (int i = 0; i < dynamicItems.size(); i++) {
-                for (int j = 0; j < dynamicItems.get(i).size(); j++) {
-                    items[i][j] = dynamicItems.get(i).get(j);
-                }
-            }
-//            String additionalInfo = null;
-//            if (split0.length == 2) {
-//                additionalInfo = split0[1];
-//            }
-            return new Matrix(items);
-        }
-
-        @Override
-        public void write(DataOutput out) throws IOException {
-            out.writeUTF(this.toString());
-        }
-
-        private String vector2String(double[] vector) {
-            StringBuilder vectorStr = new StringBuilder();
-            if (vector.length > 0) {
-                vectorStr.append(vector[0]);
-            }
-            for (int i = 1; i < vector.length; i++) {
-                vectorStr.append(' ').append(vector[i]);
-            }
-            return vectorStr.toString();
-        }
-
-        @Override
-        public String toString() {
-            StringBuilder itemsStr = new StringBuilder();
-            if (items.length > 0) {
-                itemsStr.append(vector2String(items[0]));
-            }
-            for (int i = 1; i < items.length; i++) {
-                itemsStr.append(';').append(vector2String(items[i]));
-            }
-//            if (additionalInfo != null && !additionalInfo.isEmpty()) {
-//                itemsStr.append('|').append(additionalInfo);
-//            }
-            return itemsStr.toString();
-        }
-
-    }
-    
     private static List<Jama.Matrix> readThetasFromThetasDir(JobConf job) {
         assert (job.get("thetas.path") != null);
-        //List<Point> centroids = new ArrayList<Point>();
         String filenames = "";
         try {
             FileSystem fs = FileSystem.get(job);
@@ -201,92 +94,11 @@ public final class NeuralNetworkMapReduce extends Configured implements Tool {
             matrices.put(layerId.get(), new Jama.Matrix(matrix.getItems()));
         }
         assert (matrices.size() > 1);
-        assert (!matrices.get(0).equals(matrices.get(1))); // asumption that there's at least one hidden layer
+        assert (!matrices.get(0).equals(matrices.get(1))); // assumption that there's at least one hidden layer
         thetasReader.close();
         return matrices;
     }
 
-//    public static class NormalizerMapper extends MapReduceBase implements Mapper<LongWritable, Text, LongWritable, Text> {
-//        private static final LongWritable one = new LongWritable(1L);
-//
-//        @Override
-//        public void map(LongWritable key, Text value, OutputCollector<LongWritable, Text> output, Reporter reporter) throws IOException {
-//            output.collect(one, value);
-//        }
-//    }
-//
-//    public static class NormalizerReducer extends MapReduceBase implements Reducer<LongWritable, Text, NullWritable, Text> {
-//        private List<Map<String, Long>> columnLabelsReplacements = new ArrayList<Map<String, Long>>();
-//        
-//        @Override
-//        public void reduce(LongWritable key, Iterator<Text> values, OutputCollector<NullWritable, Text> output, Reporter reporter)
-//                throws IOException {
-//            long counter = 0;
-//            Jama.Matrix means = null;
-//            List<Jama.Matrix> rows = new ArrayList<Jama.Matrix>();
-//            while (values.hasNext()) {
-//                String rowText = values.next().toString();
-//                rowText = rowText.substring(0, rowText.length()-1); // remove the point
-//                String[] split = rowText.split(",");
-//                eliminateNominalValues(split);
-//                if (means == null) {
-//                    means = new Jama.Matrix(1, split.length);
-//                }
-//                Jama.Matrix vector = convertToVector(split);
-//                rows.add(vector);
-//                means = means.plus(vector);
-//                counter++;
-//            }
-//            means.times(1d/counter);
-//            Jama.Matrix sigmas = new Jama.Matrix(1, means.getColumnDimension());
-//            for (int i = 0; i < rows.size(); i++) {
-//                sigmas.plus(rows.get(i).minus(means).arrayTimes(rows.get(i).minus(means)));
-//            }
-//            sigmas.times(1d/counter);
-//            for (int i = 0; i < sigmas.getColumnDimension(); i++) {
-//                sigmas.set(0, i, Math.sqrt(sigmas.get(0, i)));
-//            }
-//            for (int i = 0; i < rows.size(); i++) {
-//                rows.get(i).minusEquals(means).arrayRightDivideEquals(sigmas);
-//            }
-//            
-//        }
-//
-//        private Jama.Matrix convertToVector(String[] split) {
-//            double[] vectorArray = new double[split.length];
-//            for (int i = 0; i < split.length; i++) {
-//                vectorArray[i] = Double.valueOf(split[i]);
-//            }
-//            return new Jama.Matrix(new double[][] { vectorArray });
-//        }
-//
-//        private void eliminateNominalValues(String[] split) {
-//            if (columnLabelsReplacements.isEmpty()) {
-//                for (int i = 0; i < split.length; i++) {
-//                    columnLabelsReplacements.add(new HashMap<String, Long>());
-//                }
-//            }
-//            for (int i = 0; i < split.length; i++) {
-//                if (!split[i].matches("[0-9\\.]+")) {
-//                    if (columnLabelsReplacements.get(i).get(split[i]) != null) {
-//                        split[i] = Long.valueOf(columnLabelsReplacements.get(i).get(split[i])).toString();
-//                    } else {
-//                        long last = 0;
-//                        for (Long value: columnLabelsReplacements.get(i).values()) {
-//                            if (last <= value) {
-//                                last = value + 1;
-//                            }
-//                        }
-//                        columnLabelsReplacements.get(i).put(split[i], last);
-//                        split[i] = Long.valueOf(last).toString();
-//                    }
-//                }
-//            }
-//        }
-//    }
-
-    
-    
     public static class NeuralNetworkMapper extends MapReduceBase implements Mapper<LongWritable, Text, IntWritable, Text> {
         private List<Jama.Matrix> thetas;
         private int k;
@@ -378,7 +190,7 @@ public final class NeuralNetworkMapReduce extends Configured implements Tool {
                 String matrixi = split[0];
                 String Ji = split[1];
                 String amounti = split[2];
-                NeuralNetworkMapReduce.Matrix matrix = Matrix.valueOf(matrixi);
+                Matrix matrix = Matrix.valueOf(matrixi);
                 J += Double.parseDouble(Ji);
                 if (result == null) {
                     result = new Jama.Matrix(matrix.getItems());
@@ -414,7 +226,7 @@ public final class NeuralNetworkMapReduce extends Configured implements Tool {
             while (values.hasNext()) {
                 String value = values.next().toString();
                 String[] split = value.split("\t");
-                NeuralNetworkMapReduce.Matrix matrix = Matrix.valueOf(split[0]);
+                Matrix matrix = Matrix.valueOf(split[0]);
                 J += Double.parseDouble(split[1]);
                 if (result == null) {
                     result = new Jama.Matrix(matrix.getItems());
@@ -442,7 +254,10 @@ public final class NeuralNetworkMapReduce extends Configured implements Tool {
         int k = Integer.valueOf(args[5]); // number of classes
         double alpha = Double.valueOf(args[6]);
         double lambda = Double.valueOf(args[7]);
-        long maxIteration = 30;
+        long maxIteration = (args.length >= 9) ? Integer.valueOf(args[8]) : 100;
+        //Path initThetaPath = (args.length >= 10) ? new Path(args[9]): null;
+        System.out.println("n = " + n + "\nhl = " + hl + "\nhu = " + u + "\nk = " + k + "\nalpha = " + alpha + "\nlambda = "
+            + lambda + "\nmaxIteration = " + maxIteration);
         Configuration conf = getConf();
         JobConf job = new JobConf(conf, NeuralNetworkMapReduce.class);
         job.set("thetas.path", thetasPath.suffix("/it0").toString());
@@ -490,13 +305,15 @@ public final class NeuralNetworkMapReduce extends Configured implements Tool {
     private void generateInitThetas(Configuration conf, JobConf job, int n, int h, int u, int k) throws IOException {
         FileSystem fs = FileSystem.get(conf);
         Path thetasPath = new Path(job.get("thetas.path"));
-        SequenceFile.Writer thetasWriter = SequenceFile.createWriter(fs, conf, thetasPath, IntWritable.class, Text.class);
-        thetasWriter.append(new IntWritable(0), new Text(generateThetasI(u, n+1).toString()));
-        for (int i = 0; i < h - 1; i++) {
-            thetasWriter.append(new IntWritable(i+1), new Text(generateThetasI(u, u+1).toString()));
+        if (!fs.exists(thetasPath)) {
+            SequenceFile.Writer thetasWriter = SequenceFile.createWriter(fs, conf, thetasPath, IntWritable.class, Text.class);
+            thetasWriter.append(new IntWritable(0), new Text(generateThetasI(u, n+1).toString()));
+            for (int i = 0; i < h - 1; i++) {
+                thetasWriter.append(new IntWritable(i+1), new Text(generateThetasI(u, u+1).toString()));
+            }
+            thetasWriter.append(new IntWritable(h+1), new Text(generateThetasI(k, u+1).toString()));
+            thetasWriter.close();
         }
-        thetasWriter.append(new IntWritable(h+1), new Text(generateThetasI(k, u+1).toString()));
-        thetasWriter.close();
     }
     
     /*    private void generateInitThetas(Configuration conf, JobConf job, Path in, int m, int h, int u, int k) throws IOException {
@@ -579,12 +396,10 @@ public final class NeuralNetworkMapReduce extends Configured implements Tool {
                     means = new Jama.Matrix(1, split.length);
                 }
                 Jama.Matrix vector = convertToVector(split);
-                //rows.add(vector);
                 System.out.println(counter + ": " +means.getColumnDimension() + "x" + means.getRowDimension());
                 System.out.println(counter + ": " +vector.getColumnDimension() + "x" + vector.getRowDimension());
                 means = means.plus(vector);
                 counter++;
-                //System.out.println(counter);
         }
         means.timesEquals(1d/counter);
         br.close();
@@ -598,17 +413,8 @@ public final class NeuralNetworkMapReduce extends Configured implements Tool {
                 if (line == null) break;
                 String[] split = line.split("\t");
                 Jama.Matrix vector = convertToVector(split);
-                //rows.add(vector);
-                //System.out.println(means.getColumnDimension() + "x" + means.getRowDimension());
-                //System.out.println(vector.getColumnDimension() + "x" + vector.getRowDimension());
-                //means = means.plus(vector);
                 sigmas.plusEquals(vector.minus(means).arrayTimes(vector.minus(means)));
-                //counter++;
-                //System.out.println(counter);
         }
-//        for (int i = 0; i < rows.size(); i++) {
-//            sigmas.plus(rows.get(i).minus(means).arrayTimes(rows.get(i).minus(means)));
-//        }
         sigmas.timesEquals(1d/counter);
         for (int i = 0; i < sigmas.getArray()[0].length; i++) {
             if (sigmas.get(0, i) == 0) {
@@ -690,74 +496,3 @@ public final class NeuralNetworkMapReduce extends Configured implements Tool {
     }
 
 }
-
-
-final class JamaExt {
-    
-    private JamaExt() {
-        // to avoid creation of utility class.
-    }
-    
-    public static double sum(Jama.Matrix matrix) {
-        double result = 0d;
-        double[][] array = matrix.getArray();
-        for (int i = 0; i < array.length; i++) {
-            for (int j = 0; j < array[0].length; j++) {
-                result += array[i][j];
-            }
-        }
-        return result;
-    }
-    
-    public static Jama.Matrix square(Jama.Matrix matrix) {
-        Jama.Matrix result = new Jama.Matrix(matrix.getRowDimension(), matrix.getColumnDimension());
-        for (int i = 0; i < matrix.getRowDimension(); i++) {
-            for (int j = 0; j < matrix.getColumnDimension(); j++) {
-                result.set(i, j, Math.pow(matrix.get(i, j), 2));
-            }
-        }
-        return result;
-    }
-
-    public static Jama.Matrix log(Jama.Matrix matrix) {
-        Jama.Matrix result = new Jama.Matrix(matrix.getRowDimension(), matrix.getColumnDimension());
-        for (int i = 0; i < matrix.getRowDimension(); i++) {
-            for (int j = 0; j < matrix.getColumnDimension(); j++) {
-                result.set(i, j, Math.log(matrix.get(i, j)));
-            }
-        }
-        return result;
-    }
-    
-    public static Jama.Matrix addConstant(Jama.Matrix matrix, double value) {
-        double[][] oneArray = new double[matrix.getRowDimension()][matrix.getColumnDimension()];
-        for (double[] oneVector : oneArray) {
-            Arrays.fill(oneVector, value);
-        }
-        Jama.Matrix valueMatrix = new Jama.Matrix(oneArray);
-        return matrix.plus(valueMatrix);
-    }
-    
-    public static Jama.Matrix removeFirstColumn(Jama.Matrix matrix) {
-        return matrix.getMatrix(0, matrix.getRowDimension()-1, 1, matrix.getColumnDimension()-1);
-    }
-    
-    public static Jama.Matrix addOneColumn(Jama.Matrix x) {
-        double[] srcRow = x.getRowPackedCopy();
-        double[] dstRow = new double[x.getColumnDimension() + 1];
-        System.arraycopy(srcRow, 0, dstRow, 1, srcRow.length);
-        dstRow[0] = 1L;
-        return new Jama.Matrix(dstRow, 1);
-    }
-
-    public static Jama.Matrix generateZ(int y, int k2) {
-        //System.out.println(k2);
-        double[][] z = new double[1][k2];
-        for (int i = 0; i < k2; i++) {
-            z[0][i] = y == i ? 1 : 0;
-        }
-        return new Jama.Matrix(z);
-    }
-
-}
-

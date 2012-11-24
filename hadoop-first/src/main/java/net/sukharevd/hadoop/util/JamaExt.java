@@ -1,10 +1,10 @@
-package net.sukharevd.hadoop.first;
+package net.sukharevd.hadoop.util;
 
 import java.util.Arrays;
 
-public final class JamaExt1 {
+public final class JamaExt {
     
-    private JamaExt1() {
+    private JamaExt() {
         // to avoid creation of utility class.
     }
     
@@ -61,7 +61,6 @@ public final class JamaExt1 {
     }
 
     public static Jama.Matrix generateZ(int y, int k2) {
-        //System.out.println(k2);
         double[][] z = new double[1][k2];
         for (int i = 0; i < k2; i++) {
             z[0][i] = y == i ? 1 : 0;
