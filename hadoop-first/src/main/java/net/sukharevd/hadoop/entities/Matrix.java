@@ -47,7 +47,6 @@ public class Matrix implements Writable {
             ArrayList<Double> vector = new ArrayList<Double>(split2.length+1);
             for (String vectorItemString : split2) {
                 vector.add(Double.valueOf(vectorItemString));
-                
             }
             dynamicItems.add(vector);
         }

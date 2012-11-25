@@ -62,7 +62,7 @@
 					</descriptors>
 					<archive>
 						<manifest>
-							<mainClass>net.sukharevd.hadoop.first.NeuralNetworkMapReduce</mainClass>
+							<mainClass>net.sukharevd.hadoop.nn.NeuralNetworkDriver</mainClass>
 						</manifest>
 					</archive>
 				</configuration>
