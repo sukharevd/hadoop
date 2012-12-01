@@ -59,6 +59,17 @@ public final class JamaExt {
         dstRow[0] = 1L;
         return new Jama.Matrix(dstRow, 1);
     }
+    
+    public static int indexMax(Jama.Matrix vector) {
+        if (vector.getRowDimension() > 1) throw new IllegalArgumentException();
+        int maxIndex = 0;
+        for (int i = 0; i < vector.getColumnDimension(); i++) {
+            if (vector.get(0, i) > vector.get(0, maxIndex)) {
+                maxIndex = i;
+            }
+        }
+        return maxIndex;
+    }
 
     public static Jama.Matrix generateZ(int y, int k2) {
         double[][] z = new double[1][k2];

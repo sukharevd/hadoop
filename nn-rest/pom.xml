@@ -2,7 +2,6 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>net.sukharevd</groupId>
-  <artifactId>jersey</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <packaging>war</packaging>
 
@@ -11,6 +10,18 @@
   </properties>
 
   <dependencies>
+    <dependency>
+      <groupId>net.sukharevd.hadoop</groupId>
+      <artifactId>hadoop-first</artifactId>
+      <version>0.0.1-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-core</artifactId>
+      <version>1.0.4</version>
+      <scope>provided</scope>
+    </dependency>
+    
     <dependency>
       <groupId>com.sun.jersey</groupId>
       <artifactId>jersey-server</artifactId>
@@ -53,13 +64,6 @@
       <version>4.10</version>
       <scope>test</scope>
     </dependency>
-    
-    <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-core</artifactId>
-      <version>1.0.4</version>
-      <scope>provided</scope>
-    </dependency>
   </dependencies>
 
   <build>
@@ -81,7 +85,7 @@
         <configuration>
           <wait>true</wait>
           <container>
-            <containerId>tomcat6x</containerId>
+            <containerId>tomcat7x</containerId>
             <type>installed</type>
             <home>${env.CATALINA_HOME}</home>
           </container>
@@ -111,4 +115,5 @@
     </plugins>
     <finalName>jersey</finalName>
   </build>
+  <artifactId>nn-rest</artifactId>
 </project>

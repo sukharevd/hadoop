@@ -1,7 +1,7 @@
 package net.sukharevd.hadoop.nn;
 
 import static net.sukharevd.hadoop.nn.NeuralNetworkUtils.*;
-import static net.sukharevd.hadoop.util.JamaExt.addOneColumn;
+import static net.sukharevd.hadoop.util.JamaExt.*;
 
 import java.util.List;
 
@@ -18,12 +18,6 @@ public class NeuralNetworkPredictor {
             a[i] = sigmoid(z[i]);
         }
         Jama.Matrix out = a[a.length - 1];
-        int maxProbabilityClass = 0;
-        for (int i = 0; i < out.getRowDimension(); i++) {
-            if (out.get(0, i) > out.get(0, maxProbabilityClass)) {
-                maxProbabilityClass = i;
-            }
-        }
-        return maxProbabilityClass;
+        return indexMax(out);
     }
 }

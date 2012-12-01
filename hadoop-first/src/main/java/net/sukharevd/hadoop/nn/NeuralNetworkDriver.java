@@ -3,10 +3,6 @@ package net.sukharevd.hadoop.nn;
 import java.io.IOException;
 
 import net.sukharevd.hadoop.entities.Matrix;
-import net.sukharevd.hadoop.first.NeuralNetworkMapReduce;
-import net.sukharevd.hadoop.first.NeuralNetworkMapReduce.NeuralNetworkCombiner;
-import net.sukharevd.hadoop.first.NeuralNetworkMapReduce.NeuralNetworkMapper;
-import net.sukharevd.hadoop.first.NeuralNetworkMapReduce.NeuralNetworkReducer;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
@@ -26,7 +22,9 @@ import org.apache.hadoop.util.ToolRunner;
 
 public class NeuralNetworkDriver extends Configured implements Tool {
     
-    public enum NeuralNetworkCounters { SUM_J, REDUCER_COUNTER }
+    public enum NeuralNetworkCounters { SUM_J, REDUCER_COUNTER, PREDICTED_VALUE_CTR, PREDICTED_VALUE }
+    
+    //NeuralNetworkThetaGenerator generator = new NeuralNetworkRandomThetaGenerator(); 
 
     @Override
     public int run(String[] args) throws Exception {
@@ -43,7 +41,7 @@ public class NeuralNetworkDriver extends Configured implements Tool {
         System.out.println("n = " + n + "\nhl = " + hl + "\nhu = " + u + "\nk = " + k + "\nalpha = " + alpha + "\nlambda = "
             + lambda + "\nmaxIteration = " + maxIteration);
         Configuration conf = getConf();
-        JobConf job = new JobConf(conf, NeuralNetworkMapReduce.class);
+        JobConf job = new JobConf(conf, NeuralNetworkDriver.class);
         job.set("thetas.path", thetasPath.suffix("/it0").toString());
         //normalizeDataSet(conf, job, in);
         generateInitThetas(conf, job, n, hl, u, k);
@@ -51,7 +49,7 @@ public class NeuralNetworkDriver extends Configured implements Tool {
         long i;
         for (i = 0; i < maxIteration; i++) {
             conf = getConf();
-            job = new JobConf(conf, NeuralNetworkMapReduce.class);
+            job = new JobConf(conf, NeuralNetworkDriver.class);
             job.setLong("classification.iteration", i);
             Path prevout = thetasPath.suffix("/it" + job.get("classification.iteration"));
             Path out = thetasPath.suffix("/it" + (i + 1));
@@ -114,7 +112,7 @@ public class NeuralNetworkDriver extends Configured implements Tool {
     }
 
     public static void main(String[] args) throws Exception {
-        int res = ToolRunner.run(new Configuration(), new NeuralNetworkMapReduce(), args);
+        int res = ToolRunner.run(new Configuration(), new NeuralNetworkDriver(), args);
         System.exit(res);
     }
 
