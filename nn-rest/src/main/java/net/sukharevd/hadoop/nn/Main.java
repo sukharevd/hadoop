@@ -16,12 +16,8 @@ public class Main {
     public static void main(String[] args) throws IOException {
         ResourceConfig rc = new PackagesResourceConfig("net.sukharevd.hadoop.nn");
         HttpServer httpServer = GrizzlyServerFactory.createHttpServer(BASE_URI, rc);
-
-        System.out.println(String.format("Jersey app started with WADL available at "
-                + "%s/books/\nHit enter to stop it...", BASE_URI));
+        System.out.println(String.format("Jersey app started at %s. Hit enter to stop it...", BASE_URI));
         System.in.read();
         httpServer.stop();
-//        Book book = new Book("88989897", "Effective PHP", new String[] {"Smith", "Jackson"});
-//        System.out.println(new ObjectMapper().writeValueAsString(book));
     }
 }

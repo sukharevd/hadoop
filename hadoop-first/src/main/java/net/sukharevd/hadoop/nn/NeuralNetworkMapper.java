@@ -66,13 +66,6 @@ public class NeuralNetworkMapper extends MapReduceBase implements Mapper<LongWri
     public void configure(JobConf job) {
         super.configure(job);
         thetas = readThetasFromThetasDir(job);
-//        System.out.println("Thetas");
-//        for (Jama.Matrix theta : thetas) {
-//            for (int i = 0; i < theta.getArray().length; i++) {
-//                System.out.println(Arrays.toString(theta.getArray()[i]));
-//            }
-//        }
-        
         k = job.getInt("classification.k", -1);
         hl = job.getInt("classification.hl", -1);
         lambda = Double.parseDouble(job.get("classification.regularization.lambda"));
@@ -114,7 +107,7 @@ public class NeuralNetworkMapper extends MapReduceBase implements Mapper<LongWri
         for (int i = 0; i < thetas.size(); i++) {
             J += lambda * sum(square(removeFirstColumn(thetas.get(0)))); // div 2
         }
-        
+
         Jama.Matrix[] delta = new Jama.Matrix[1 + hl]; // for each hidden unit and for output unit.
         delta[hl] = out.minus(Y); // last
         for (int i = hl - 1; i >= 0; i--) {

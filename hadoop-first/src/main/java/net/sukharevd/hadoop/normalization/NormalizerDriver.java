@@ -11,12 +11,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import net.sukharevd.hadoop.entities.Matrix;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.MapWritable;
+import org.apache.hadoop.io.NullWritable;
+import org.apache.hadoop.io.SequenceFile;
+import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
@@ -65,10 +72,21 @@ public class NormalizerDriver extends Configured implements Tool {
         bw.flush();
         bw.close();
 
-        Path InputFeaturesMapPath = in.suffix(".featuresMap");
-        out = fs.create(InputFeaturesMapPath);
+        Path inputFeaturesMapPath = in.suffix(".featuresMap");
+        out = fs.create(inputFeaturesMapPath);
         out.writeUTF(columnLabelsReplacements.toString());
         out.close();
+        
+        Path inputFeaturesMapPath2 = in.suffix(".featuresMap2");
+        SequenceFile.Writer writer = new SequenceFile.Writer(fs, conf, inputFeaturesMapPath2, NullWritable.class, MapWritable.class);
+        for (Map<String, Long> map : columnLabelsReplacements) {
+            MapWritable mapWritable = new MapWritable();
+            for (String key : map.keySet()) {
+                mapWritable.put(new Text(key), new LongWritable(map.get(key)));
+            }
+            writer.append(NullWritable.get(), mapWritable);
+        }
+        writer.close();
 
         System.out.println("Means");
         long counter = 0;
@@ -84,14 +102,17 @@ public class NormalizerDriver extends Configured implements Tool {
                 means = new Jama.Matrix(1, split.length);
             }
             Jama.Matrix vector = convertToVector(split);
-            System.out.println(counter + ": " + means.getColumnDimension() + "x" + means.getRowDimension());
-            System.out.println(counter + ": " + vector.getColumnDimension() + "x" + vector.getRowDimension());
             means = means.plus(vector);
             counter++;
         }
         means.timesEquals(1d / counter);
         br.close();
         means.set(0, means.getColumnDimension()-1, 0); // don't wanna change labels
+        
+        Path meansPath = in.suffix(".means");
+        out = fs.create(meansPath);
+        out.writeUTF(new Matrix(means.getArray()).toString());
+        out.close();
 
         System.out.println("Sigmas");
         Jama.Matrix sigmas = new Jama.Matrix(1, means.getColumnDimension());
@@ -118,6 +139,12 @@ public class NormalizerDriver extends Configured implements Tool {
             sigmas.set(0, i, Math.sqrt(sigmas.get(0, i)));
         }
         br.close();
+        
+        Path sigmasPath = in.suffix(".sigmas");
+        out = fs.create(sigmasPath);
+        out.writeUTF(new Matrix(sigmas.getArray()).toString());
+        out.close();
+        
         for (int i = 0; i < means.getArray().length; i++) {
             System.out.println("Means: " + Arrays.toString(means.getArray()[i]));
         }

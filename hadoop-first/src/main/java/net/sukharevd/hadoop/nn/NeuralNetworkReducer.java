@@ -58,7 +58,6 @@ public class NeuralNetworkReducer extends MapReduceBase implements Reducer<IntWr
         Jama.Matrix delta = result.times(alpha/counter);
         Jama.Matrix regularization = thetas.get(key.get()).times(lambda/counter);
         thetas.get(key.get()).minusEquals(delta.plus(regularization));
-        //System.out.println(key.toString() + ": " + J + "\t" + errorRate + '\t' + counter + "\tThetas: " + Arrays.toString(thetas.get(key.get()).getArray()[0]));
         thetasWritable.setItems(thetas.get(key.get()).getArray());
         output.collect(key, new Text(thetasWritable.toString() + "\t" + J + "\t" + errorRate + "\t" + counter));
     }

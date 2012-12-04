@@ -24,8 +24,6 @@ public class NeuralNetworkDriver extends Configured implements Tool {
     
     public enum NeuralNetworkCounters { SUM_J, REDUCER_COUNTER, PREDICTED_VALUE_CTR, PREDICTED_VALUE }
     
-    //NeuralNetworkThetaGenerator generator = new NeuralNetworkRandomThetaGenerator(); 
-
     @Override
     public int run(String[] args) throws Exception {
         Path in = new Path(args[0]);
@@ -37,13 +35,11 @@ public class NeuralNetworkDriver extends Configured implements Tool {
         double alpha = Double.valueOf(args[6]);
         double lambda = Double.valueOf(args[7]);
         long maxIteration = (args.length >= 9) ? Integer.valueOf(args[8]) : 100;
-        //Path initThetaPath = (args.length >= 10) ? new Path(args[9]): null;
         System.out.println("n = " + n + "\nhl = " + hl + "\nhu = " + u + "\nk = " + k + "\nalpha = " + alpha + "\nlambda = "
             + lambda + "\nmaxIteration = " + maxIteration);
         Configuration conf = getConf();
         JobConf job = new JobConf(conf, NeuralNetworkDriver.class);
         job.set("thetas.path", thetasPath.suffix("/it0").toString());
-        //normalizeDataSet(conf, job, in);
         generateInitThetas(conf, job, n, hl, u, k);
 
         long i;

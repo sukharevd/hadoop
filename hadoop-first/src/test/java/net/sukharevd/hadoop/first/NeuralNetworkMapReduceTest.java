@@ -6,19 +6,15 @@ import java.io.IOException;
 
 import net.sukharevd.hadoop.entities.Matrix;
 import net.sukharevd.hadoop.nn.NeuralNetworkDriver;
-import net.sukharevd.hadoop.nn.NeuralNetworkMapper;
-import net.sukharevd.hadoop.nn.NeuralNetworkReducer;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.util.ToolRunner;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 public class NeuralNetworkMapReduceTest {
-
-	private NeuralNetworkMapper mapper = new NeuralNetworkMapper();
-	private NeuralNetworkReducer reducer = new NeuralNetworkReducer();
 
 	@Test
 	public void valueOfMatrix() {
@@ -46,11 +42,9 @@ public class NeuralNetworkMapReduceTest {
 	}
 	
 	@Before
+	@After
 	public void prepare() throws IOException {
 	    Configuration conf = new Configuration();
-        //conf.addResource(new org.apache.hadoop.fs.Path("/opt/hadoop/conf/core-site.xml"));
-        //conf.addResource(new org.apache.hadoop.fs.Path("/opt/hadoop/conf/hdfs-site.xml"));
-
         FileSystem fs = FileSystem.get(conf);
         org.apache.hadoop.fs.Path file = new org.apache.hadoop.fs.Path("src/test/resources/outputs/it1/");
         fs.delete(file, true);
@@ -61,7 +55,6 @@ public class NeuralNetworkMapReduceTest {
 	
 	@Test
 	public void complexTest() throws Exception {
-	    //NeuralNetworkDriver driver = new NeuralNetworkDriver();
 	    String[] args = new String[] {
 	        "src/test/resources/input/kddcup.data.corrected.normalized.s",     // input data-set path
 	        "src/test/resources/outputs/",                                     // output thetas directory
