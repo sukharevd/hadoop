@@ -62,21 +62,9 @@ public class NeuralNetworkDriver extends Configured implements Tool {
             job.setReducerClass(NeuralNetworkReducer.class);
             job.setInputFormat(TextInputFormat.class);
             job.setOutputFormat(SequenceFileOutputFormat.class);
-//            SequenceFileOutputFormat.setOutputCompressionType(job, CompressionType.RECORD);
-//            FileOutputFormat.setCompressOutput(job, true);
-//            FileOutputFormat.setOutputCompressorClass(job, BZip2Codec.class);
             job.setOutputKeyClass(IntWritable.class);
             job.setOutputValueClass(Text.class);
             JobClient.runJob(job);
-//            RunningJob runningJob = JobClient.runJob(job);
-            //long convergedCounter = runningJob.getCounters().getCounter(Counters.CONVERGED);
-            //long allCounter = runningJob.getCounters().getCounter(Counters.ALL);
-//            if (convergedCounter == allCounter) {
-//                System.out.println("Converged at " + i + "th iteration.");
-//                break;
-//            } else {
-//                System.out.println("Converged " + convergedCounter + " of " + allCounter);
-//            }
         }
 
         return 0;

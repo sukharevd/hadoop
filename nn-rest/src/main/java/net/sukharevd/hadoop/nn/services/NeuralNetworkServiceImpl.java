@@ -47,9 +47,6 @@ public class NeuralNetworkServiceImpl implements NeuralNetworkService {
         Jama.Matrix means = getMatrixFromTextFile(fs, "/user/dmitriy/nn/inputs/input_10p.csv.means");
         Jama.Matrix sigmas = getMatrixFromTextFile(fs, "/user/dmitriy/nn/inputs/input_10p.csv.sigmas");
         List<Map<String, Long>> nominal2numericMaps = getNominalMaps(conf, fs, "/user/dmitriy/nn/inputs/input_10p.csv.featuresMap");
-        //if (exampleSplit.length + 1 != nominal2numericMaps.size()) throw new IllegalArgumentException();
-        //if (exampleSplit.length + 1 != means.getColumnDimension()) throw new IllegalArgumentException();
-        //if (exampleSplit.length + 1 != sigmas.getColumnDimension()) throw new IllegalArgumentException();
         double[][] exampleArray = new double[1][exampleSplit.length];
         for (int i = 0; i < exampleSplit.length; i++) {
             if (nominal2numericMaps.get(i) != null && nominal2numericMaps.get(i).get(exampleSplit[i]) != null) {
@@ -131,7 +128,6 @@ public class NeuralNetworkServiceImpl implements NeuralNetworkService {
             FileStatus[] listStatus = fs.listStatus(centroidsPath);
             for (int i = 0; i < listStatus.length; i++) {
                 if (listStatus[i].isDir() && !"7".equals(listStatus[i].getPath().getName())) {
-                    //System.out.println(listStatus[i].getPath().toUri());
                     resultMap.putAll(readThetasFromThetasDir(conf, listStatus[i].getPath(), listStatus[i]));
                 }
             }
@@ -153,10 +149,7 @@ public class NeuralNetworkServiceImpl implements NeuralNetworkService {
         String filenames = "";
         try {
             FileSystem fs = FileSystem.get(conf);
-            //org.apache.hadoop.fs.Path centroidsPath = new org.apache.hadoop.fs.Path(conf.get("thetas.path"));
             if (fs.isFile(centroidsPath)) {
-//                filenames += centroidsPath.toString();
-//                return new ArrayList<Jama.Matrix>(readFile(conf, fs, centroidsPath).values());
                 throw new IllegalStateException();
             } else { // isDirectory
                 FileStatus[] listStatus = fs.listStatus(centroidsPath);
@@ -168,7 +161,6 @@ public class NeuralNetworkServiceImpl implements NeuralNetworkService {
                         result[0] += oneFileResult[0];
                         result[1] += oneFileResult[1];
                         counter++;
-                        //builder.append(fileStatus.getPath().toString()).append('\t').append(oneFileBuilder).append('\n');
                     }
                 }
                 result[0] /= counter;
@@ -193,16 +185,13 @@ public class NeuralNetworkServiceImpl implements NeuralNetworkService {
         SequenceFile.Reader thetasReader = new SequenceFile.Reader(fs, thetasPath, conf);
         IntWritable layerId = new IntWritable();
         Text text = new Text();
-        //StringBuilder builder = new StringBuilder();
         double[] result = new double[] {0d, 0d};
         int counter = 0;
-        //SortedMap<Integer, Jama.Matrix> matrices = new TreeMap<Integer, Jama.Matrix>();
         while (thetasReader.next(layerId, text)) {
             String[] split = text.toString().split("\t");
             if (split.length < 3) continue;
             result[0] += Double.parseDouble(split[1]);  result[1] += Double.parseDouble(split[2]);
             counter++;
-            //builder.append(split[1]).append('\t').append(split[2]).append('\n');
         }
         result[0] /= counter; result[1] /= counter;
         thetasReader.close();

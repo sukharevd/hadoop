@@ -4,11 +4,8 @@ import static net.sukharevd.hadoop.nn.NeuralNetworkUtils.readThetasFromThetasDir
 import static net.sukharevd.hadoop.util.JamaExt.*;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import net.sukharevd.hadoop.entities.Matrix;
 
@@ -32,36 +29,6 @@ public class NeuralNetworkMapper extends MapReduceBase implements Mapper<LongWri
     private Matrix gradWritable = new Matrix();
     private Text resultText = new Text();
     
-    private static final Map<String, String> attack2type = new HashMap<String, String>();
-    static {
-        attack2type.put("back", "dos");
-        attack2type.put("buffer_overflow", "u2r");
-        attack2type.put("ftp_write", "r2l");
-        attack2type.put("guess_passwd", "r2l");
-        attack2type.put("imap", "r2l");
-        attack2type.put("ipsweep", "probe");
-        attack2type.put("land", "dos");
-        attack2type.put("loadmodule", "u2r");
-        attack2type.put("multihop", "r2l");
-        attack2type.put("neptune", "dos");
-        attack2type.put("nmap", "probe");
-        attack2type.put("perl", "u2r");
-        attack2type.put("phf", "r2l");
-        attack2type.put("pod", "dos");
-        attack2type.put("portsweep", "probe");
-        attack2type.put("rootkit", "u2r");
-        attack2type.put("satan", "probe");
-        attack2type.put("smurf", "dos");
-        attack2type.put("spy", "r2l");
-        attack2type.put("teardrop", "dos");
-        attack2type.put("warezclient", "r2l");
-        attack2type.put("warezmaster", "r2l");
-        attack2type.put("normal", "normal");
-    }
-    private static final List<String> attacks = new ArrayList<String>(Arrays.asList("normal", "buffer_overflow", "loadmodule", "perl",
-            "neptune", "smurf", "guess_passwd", "pod", "teardrop", "portsweep", "ipsweep", "land", "ftp_write", "back", "imap", "satan",
-            "phf", "nmap", "multihop", "warezmaster", "warezclient", "spy", "rootkit"));
-
     @Override
     public void configure(JobConf job) {
         super.configure(job);
@@ -90,19 +57,7 @@ public class NeuralNetworkMapper extends MapReduceBase implements Mapper<LongWri
         }
         Jama.Matrix out = a[a.length - 1];
         int predictedClass = indexMax(out);
-        //System.out.println(predictedClass);
-        /*String predictedType = null;
-        String expectedType = null;
-        try {
-        predictedType = attack2type.get(attacks.get(predictedClass));
-        expectedType = attack2type.get(attacks.get(y));
-        } catch (IndexOutOfBoundsException e) {
-            System.err.println(attacks.get(predictedClass));
-            System.err.println(attacks.get(y));
-            System.exit(1);
-        }*/
-        
-        // J = -sum(sum(z .* log(a3) + (1-z) .* log(1.0 - a3))) ./ m + lambda * (sum(sumsq(Theta1(:,2:end)))+sum(sumsq(Theta2(:,2:end)))) / (2*m);
+
         double J = -sum(Y.arrayTimes(log(out)).plus(addConstant(Y.uminus(), 1).arrayTimes(log( addConstant(out.uminus(), 1)))));
         for (int i = 0; i < thetas.size(); i++) {
             J += lambda * sum(square(removeFirstColumn(thetas.get(0)))); // div 2
@@ -118,10 +73,6 @@ public class NeuralNetworkMapper extends MapReduceBase implements Mapper<LongWri
             results[i] = delta[i].transpose().times(a[i]);
             thetasIdxWritable.set(i);
             gradWritable.setItems(results[i].getArray());
-//            if (predictedClass > 0) {
-//                reporter.incrCounter(NeuralNetworkDriver.NeuralNetworkCounters.PREDICTED_VALUE, predictedClass);
-//                reporter.incrCounter(NeuralNetworkDriver.NeuralNetworkCounters.PREDICTED_VALUE_CTR, 1);
-//            }
             resultText.set(gradWritable.toString() + "\t" + J + "\t" + (/*(predictedClass == 0 && y == 0) || (predictedClass != 0 && y!= 0)*/ /*predictedType.equals(expectedType)*/ predictedClass == y ? 1 : 0) + "\t1");
             output.collect(thetasIdxWritable, resultText);
         }
