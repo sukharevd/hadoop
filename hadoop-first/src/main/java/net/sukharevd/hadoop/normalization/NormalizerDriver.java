@@ -41,7 +41,7 @@ public class NormalizerDriver extends Configured implements Tool {
     public int run(String[] arg0) throws Exception {
         Configuration conf = getConf();
         JobConf job = new JobConf(conf, NormalizerDriver.class);
-        normalizeDataSet(conf, job, new Path("/home/dmitriy/Desktop/data-sets/kddcup.data_10_percent_corrected"));
+        normalizeDataSet(conf, job, new Path("/home/dmitriy/Desktop/data-sets/10p/kddcup.csv"));
         return 0;
     }
 
